@@ -41,7 +41,7 @@ using type = class IrType;
 typedef struct TYPE type;
 #endif
 
-void semanticTypeInfo(Scope *sc, Type *t);
+void semanticTypeInfo(Scope *sc, Type *t, const Loc &loc);
 
 Type *typeSemantic(Type *t, const Loc &loc, Scope *sc);
 Type *merge(Type *type);

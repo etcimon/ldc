@@ -666,6 +666,8 @@ __gshared FatalErrorHandler fatalErrorHandler;
  */
 extern (C++) void fatal()
 {
+    
+    
     if (fatalErrorHandler && fatalErrorHandler())
         return;
 

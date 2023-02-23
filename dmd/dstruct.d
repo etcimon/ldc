@@ -68,7 +68,7 @@ extern (C++) FuncDeclaration search_toString(StructDeclaration sd)
  *      sc = context
  *      t = type that TypeInfo is being generated for
  */
-extern (C++) void semanticTypeInfo(Scope* sc, Type t)
+extern (C++) void semanticTypeInfo(Scope* sc, Type t, const ref Loc loc)
 {
     if (sc)
     {
@@ -83,13 +83,13 @@ extern (C++) void semanticTypeInfo(Scope* sc, Type t)
 
     void visitVector(TypeVector t)
     {
-        semanticTypeInfo(sc, t.basetype);
+        semanticTypeInfo(sc, t.basetype, loc);
     }
 
     void visitAArray(TypeAArray t)
     {
-        semanticTypeInfo(sc, t.index);
-        semanticTypeInfo(sc, t.next);
+        semanticTypeInfo(sc, t.index, loc);
+        semanticTypeInfo(sc, t.next, loc);
     }
 
     void visitStruct(TypeStruct t)
@@ -103,7 +103,7 @@ extern (C++) void semanticTypeInfo(Scope* sc, Type t)
         {
             Scope scx;
             scx._module = sd.getModule();
-            getTypeInfoType(sd.loc, t, &scx);
+            getTypeInfoType(loc, t, &scx);
 version (IN_LLVM) {} else
 {
             sd.requestTypeInfo = true;
@@ -116,7 +116,7 @@ version (IN_LLVM) {} else
         }
         else
         {
-            getTypeInfoType(sd.loc, t, sc);
+            getTypeInfoType(loc, t, sc);
 version (IN_LLVM) {} else
 {
             sd.requestTypeInfo = true;
@@ -164,7 +164,7 @@ version (IN_LLVM) {} else
         {
             foreach (arg; *t.arguments)
             {
-                semanticTypeInfo(sc, arg.type);
+                semanticTypeInfo(sc, arg.type, loc);
             }
         }
     }
@@ -183,7 +183,7 @@ version (IN_LLVM) {} else
         case Tclass:
         case Tenum:     break;
 
-        default:        semanticTypeInfo(sc, tb.nextOf()); break;
+        default:        semanticTypeInfo(sc, tb.nextOf(), loc); break;
     }
 }
 

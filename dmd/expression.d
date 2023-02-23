@@ -1494,7 +1494,7 @@ extern (C++) /* IN_LLVM abstract */ class Expression : ASTNode
      * Check that the postblit is callable if t is an array of structs.
      * Returns true if error happens.
      */
-    extern (D) final bool checkPostblit(Scope* sc, Type t)
+    extern (D) final bool checkPostblit(Scope* sc, Type t, const ref Loc loc)
     {
         if (auto ts = t.baseElemOf().isTypeStruct())
         {
@@ -1502,7 +1502,7 @@ extern (C++) /* IN_LLVM abstract */ class Expression : ASTNode
             {
                 // https://issues.dlang.org/show_bug.cgi?id=11395
                 // Require TypeInfo generation for array concatenation
-                semanticTypeInfo(sc, t);
+                semanticTypeInfo(sc, t, loc);
             }
 
             StructDeclaration sd = ts.sym;

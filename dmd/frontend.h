@@ -6285,7 +6285,7 @@ extern void gendocfile(Module* m);
 
 extern FuncDeclaration* search_toString(StructDeclaration* sd);
 
-extern void semanticTypeInfo(Scope* sc, Type* t);
+extern void semanticTypeInfo(Scope* sc, Type* t, const Loc &loc);
 
 class StructDeclaration : public AggregateDeclaration
 {

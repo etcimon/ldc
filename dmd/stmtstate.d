@@ -34,6 +34,7 @@ struct StmtState(block)
     block* defaultBlock;
     block* finallyBlock;
     block* tryBlock;
+    bool ctfeOnly;
 
     this(StmtState* prev, Statement statement)
     {

@@ -554,7 +554,7 @@ private Expression resolveUFCS(Scope* sc, CallExp ce)
                 if (key.checkValue() || key.checkSharedAccess(sc))
                     return ErrorExp.get();
 
-                semanticTypeInfo(sc, taa.index);
+                semanticTypeInfo(sc, taa.index, loc);
 
                 return new RemoveExp(loc, eleft, key);
             }
@@ -3169,7 +3169,7 @@ private extern (C++) final class ExpressionSemanticVisitor : Visitor
         }
 
         if (global.params.useTypeInfo && Type.dtypeinfo)
-            semanticTypeInfo(sc, e.type);
+            semanticTypeInfo(sc, e.type, e.loc);
 
         result = e;
     }
@@ -3208,8 +3208,8 @@ private extern (C++) final class ExpressionSemanticVisitor : Visitor
 
         e.type = new TypeAArray(tvalue, tkey);
         e.type = e.type.typeSemantic(e.loc, sc);
-
-        semanticTypeInfo(sc, e.type);
+        
+        semanticTypeInfo(sc, e.type, e.loc);
 
         if (checkAssocArrayLiteralEscape(sc, e, false))
             return setError();
@@ -3938,7 +3938,7 @@ private extern (C++) final class ExpressionSemanticVisitor : Visitor
 
         //printf("NewExp: '%s'\n", toChars());
         //printf("NewExp:type '%s'\n", type.toChars());
-        semanticTypeInfo(sc, exp.type);
+        semanticTypeInfo(sc, exp.type, exp.loc);
 
         if (newprefix)
         {
@@ -5499,7 +5499,7 @@ private extern (C++) final class ExpressionSemanticVisitor : Visitor
             e = new TypeidExp(exp.loc, ta);
             e.type = getTypeInfoType(exp.loc, ta, sc);
 
-            semanticTypeInfo(sc, ta);
+            semanticTypeInfo(sc, ta, exp.loc);
 
             if (ea)
             {
@@ -8463,7 +8463,7 @@ version (IN_LLVM)
                         return setError();
                 }
 
-                semanticTypeInfo(sc, taa);
+                semanticTypeInfo(sc, taa, exp.loc);
 
                 exp.type = taa.next;
                 break;
@@ -9497,7 +9497,7 @@ version (IN_LLVM)
             {
                 if (exp.op != EXP.blit && (e2x.op == EXP.slice && (cast(UnaExp)e2x).e1.isLvalue() || e2x.op == EXP.cast_ && (cast(UnaExp)e2x).e1.isLvalue() || e2x.op != EXP.slice && e2x.isLvalue()))
                 {
-                    if (e1x.checkPostblit(sc, t1))
+                    if (e1x.checkPostblit(sc, t1, exp.loc))
                         return setError();
                 }
 
@@ -9733,7 +9733,7 @@ version (IN_LLVM)
             // '= null' is the only allowable block assignment (Bug 7493)
             exp.memset = MemorySet.blockAssign;    // make it easy for back end to tell what this is
             e2x = e2x.implicitCastTo(sc, t1.nextOf());
-            if (exp.op != EXP.blit && e2x.isLvalue() && exp.e1.checkPostblit(sc, t1.nextOf()))
+            if (exp.op != EXP.blit && e2x.isLvalue() && exp.e1.checkPostblit(sc, t1.nextOf(), exp.loc))
                 return setError();
         }
         else if (exp.e1.op == EXP.slice &&
@@ -9771,7 +9771,7 @@ version (IN_LLVM)
                  e2x.op == EXP.cast_ && (cast(UnaExp)e2x).e1.isLvalue() ||
                  e2x.op != EXP.slice && e2x.isLvalue()))
             {
-                if (exp.e1.checkPostblit(sc, t1.nextOf()))
+                if (exp.e1.checkPostblit(sc, t1.nextOf(), exp.loc))
                     return setError();
             }
 
@@ -10261,7 +10261,7 @@ version (IN_LLVM)
         {
             // EXP.concatenateAssign
             assert(exp.op == EXP.concatenateAssign);
-            if (exp.e1.checkPostblit(sc, tb1next))
+            if (exp.e1.checkPostblit(sc, tb1next, exp.loc))
                 return setError();
 
             exp.e2 = exp.e2.castTo(sc, exp.e1.type);
@@ -10279,7 +10279,7 @@ version (IN_LLVM)
             if (tb2.ty == Tclass && (cast(TypeClass)tb2).implicitConvToThroughAliasThis(tb1next))
                 goto Laliasthis;
             // Append element
-            if (exp.e2.checkPostblit(sc, tb2))
+            if (exp.e2.checkPostblit(sc, tb2, exp.loc))
                 return setError();
 
             if (checkNewEscape(sc, exp.e2, false))
@@ -10826,7 +10826,7 @@ version (IN_LLVM)
             }
             else
             {
-                if (exp.e2.checkPostblit(sc, tb2))
+                if (exp.e2.checkPostblit(sc, tb2, exp.loc))
                     return setError();
                 // Postblit call will be done in runtime helper function
             }
@@ -10865,7 +10865,7 @@ version (IN_LLVM)
             }
             else
             {
-                if (exp.e1.checkPostblit(sc, tb1))
+                if (exp.e1.checkPostblit(sc, tb1, exp.loc))
                     return setError();
             }
 
@@ -10923,7 +10923,7 @@ version (IN_LLVM)
         }
         if (Type tbn = tb.nextOf())
         {
-            if (exp.checkPostblit(sc, tbn))
+            if (exp.checkPostblit(sc, tbn, exp.loc))
                 return setError();
         }
         Type t1 = exp.e1.type.toBasetype();
@@ -11849,7 +11849,7 @@ version (IN_LLVM)
                     exp.e1 = exp.e1.implicitCastTo(sc, ta.index);
                 }
 
-                semanticTypeInfo(sc, ta.index);
+                semanticTypeInfo(sc, ta.index, exp.loc);
 
                 // Return type is pointer to value
                 exp.type = ta.nextOf().pointerTo();
@@ -11971,7 +11971,7 @@ version (IN_LLVM)
 
         // Indicates whether the comparison of the 2 specified array types
         // requires an object.__equals() lowering.
-        static bool needsDirectEq(Type t1, Type t2, Scope* sc)
+        static bool needsDirectEq(Type t1, Type t2, Scope* sc, const ref Loc loc)
         {
             Type t1n = t1.nextOf().toBasetype();
             Type t2n = t2.nextOf().toBasetype();
@@ -11990,7 +11990,7 @@ version (IN_LLVM)
             {
                 // semanticTypeInfo() makes sure hasIdentityEquals has been computed
                 if (global.params.useTypeInfo && Type.dtypeinfo)
-                    semanticTypeInfo(sc, ts);
+                    semanticTypeInfo(sc, ts, loc);
 
                 return ts.sym.hasIdentityEquals; // has custom opEquals
             }
@@ -12007,7 +12007,7 @@ version (IN_LLVM)
 
         const isArrayComparison = (t1.ty == Tarray || t1.ty == Tsarray) &&
                                   (t2.ty == Tarray || t2.ty == Tsarray);
-        const needsArrayLowering = isArrayComparison && needsDirectEq(t1, t2, sc);
+        const needsArrayLowering = isArrayComparison && needsDirectEq(t1, t2, sc, exp.loc);
 
         if (!needsArrayLowering)
         {
@@ -12081,7 +12081,7 @@ version (IN_LLVM)
         }
 
         if (exp.e1.type.toBasetype().ty == Taarray)
-            semanticTypeInfo(sc, exp.e1.type.toBasetype());
+            semanticTypeInfo(sc, exp.e1.type.toBasetype(), exp.loc);
 
 
         if (!target.isVectorOpSupported(t1, exp.op, t2))

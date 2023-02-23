@@ -374,6 +374,8 @@ version (IN_LLVM) {} else
 
     bool requiresClosure;               // this function needs a closure
 
+    bool skipretnogc;
+
     /** local variables in this function which are referenced by nested functions
      * (They'll get put into the "closure" for this function.)
      */
