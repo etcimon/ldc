@@ -13,5 +13,9 @@ Host dub package (`tools/runtime-adapt`), not installed with LDC.
 - Constraints are inferred from `consecutiveTags` in `source/versions.d`
   (one closed interval per minor).
 
+`--check` (and `SURFACE.md` after `--generate`) lists compiler-facing
+names missing from this runtime. File presence is complete; bodies of
+`ldc/*` stay handwritten.
+
 Green: `dub test --root=tools/runtime-adapt --compiler=ldc2`.
 Extend: `tools/runtime-adapt/EXTENDING.md`.

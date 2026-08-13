@@ -21,6 +21,7 @@ import emit;
 import paths;
 import principles;
 import resolve;
+import surface;
 import versions;
 import walk;
 
@@ -60,6 +61,7 @@ struct IterateReport
     bool equivalent;
     EmitReport emit;
     VersionAstReport astDiff;
+    SurfaceReport surface;
 }
 
 IterateReport iterateVersion(string repoRoot, string tag, string againstRoot,
@@ -125,11 +127,15 @@ IterateReport iterateVersion(string repoRoot, string tag, string againstRoot,
             mkdirRecurse(outDir);
             write(buildPath(outDir, "AST-DIFF.md"), renderVersionAst(rep.astDiff));
             write(buildPath(outDir, "FILE-CMP.md"), renderFileCmp(rep.astDiff));
+            rep.surface = checkSurface(goalForAst, outDir);
+            write(buildPath(outDir, "SURFACE.md"), renderSurface(rep.surface));
         }
         catch (Exception)
         {
         }
     }
+    else
+        rep.surface = checkSurface(rep.ldcRoot, outDir);
     rep.equivalent = er.validated;
     return rep;
 }

@@ -18,10 +18,12 @@ import parseutil;
 import paths;
 import principles;
 import resolve;
+import surface;
 import versions;
 import walk;
 
 import std.algorithm : canFind;
+import std.array : join;
 import std.file : exists, readText, tempDir, rmdirRecurse;
 import std.path : buildPath;
 
@@ -122,4 +124,21 @@ unittest
     }
     assert(sawInn && sawAttr);
     assert(!sawJunk);
+}
+
+unittest
+{
+    // Compiler-facing names must appear in this checkout's runtime.
+    auto ldc = thisLdc();
+    if (!ldc.length)
+        return;
+    auto sr = checkSurface(ldc);
+    assert(sr.ok);
+    assert(sr.modulesChecked > 0);
+    assert(sr.pragmasChecked > 0);
+    string[] runtimeGaps;
+    foreach (g; sr.missing)
+        if (g.where == "runtime")
+            runtimeGaps ~= g.kind ~ ":" ~ g.name;
+    assert(!runtimeGaps.length, runtimeGaps.join(", "));
 }

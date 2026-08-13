@@ -18,6 +18,7 @@ import iterate;
 import paths;
 import report;
 import resolve;
+import surface;
 import versions;
 import walk;
 
@@ -45,6 +46,7 @@ int main(string[] args)
     bool doGenerate;
     bool doAllVersions;
     bool doClean;
+    bool doCheck;
     bool outputSet;
     bool adaptedSet;
     string outputArg;
@@ -115,6 +117,8 @@ int main(string[] args)
             doAllVersions = true;
         else if (a == "--clean")
             doClean = true;
+        else if (a == "--check")
+            doCheck = true;
         else if (a == "--window")
         {
             window = to!size_t(next());
@@ -146,7 +150,7 @@ int main(string[] args)
         roots.outDir = resolveOutput(roots.ldc, outputArg);
 
     immutable noAction = !doGenerate && !doClean && !doSync && !doAllVersions
-        && !doConsecutive && !diffVersion.length && !adaptedSet;
+        && !doConsecutive && !doCheck && !diffVersion.length && !adaptedSet;
     if (help || noAction)
     {
         writeln(usageHelp());
@@ -157,9 +161,16 @@ int main(string[] args)
     {
         auto n = cleanCaches(roots.ldc);
         writeln("clean        removed ", n, " cache dir(s) under ", toolRoot(roots.ldc));
-        if (!doSync && !doAllVersions && !doGenerate && !doConsecutive
+        if (!doSync && !doAllVersions && !doGenerate && !doConsecutive && !doCheck
             && !diffVersion.length && !roots.adapted.length && !referenceSet)
             return 0;
+    }
+
+    if (doCheck && !doGenerate)
+    {
+        auto sr = checkSurface(roots.ldc);
+        writeln(renderSurface(sr));
+        return surfaceClean(sr) ? 0 : 6;
     }
 
     auto tags = selectedTags(roots.reference, referenceSet, fromTag, toTag,
@@ -246,6 +257,9 @@ int main(string[] args)
         writeln("ast-diff     ", buildPath(outD, "AST-DIFF.md"),
             " ldcGaps=", rep.astDiff.ldcWithGaps,
             " missingFiles=", rep.astDiff.missingFiles);
+        writeln("surface      missing=", rep.surface.missing.length);
+        if (doCheck && !surfaceClean(rep.surface))
+            return 6;
         return (rep.equivalent && rep.versionOk) ? 0 : 5;
     }
 
@@ -389,6 +403,7 @@ Cache only (no emit; last %s minors %s … %s):
   --from v1.36.0 --to v1.42.0
   --range v1.36.0..v1.42.0
   --clean               delete .work/, workspace/{refs,stock}, bin/, clones/
+  --check               compiler → this runtime: missing modules/pragmas/hooks
 
 Paths:
   --ldc-root DIR        this LDC checkout (auto-detected)

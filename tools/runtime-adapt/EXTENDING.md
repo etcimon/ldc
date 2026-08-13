@@ -47,6 +47,10 @@ tests/codegen/new_thing.d              optional: tests/ under this package
 Generate always from **this checkout**. At most one `--reference TAG`.
 Ranges (`--all-versions`, `--range`) only prefetch gitignored caches.
 
+`--check` (and `SURFACE.md` after `--generate`) is the inclusion net:
+compiler-facing modules, runtime pragmas, UDAs, public `llvm.*` names,
+and `_d_*` hooks must appear in this checkout’s runtime.
+
 4. From the LDC repo root:
 
    ```text

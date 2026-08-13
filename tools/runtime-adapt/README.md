@@ -46,7 +46,11 @@ dub run --root=tools/runtime-adapt --compiler=ldc2 -- --generate --reference v1.
 ```
 
 Default `--output` is `tools/runtime-adapt/.work/generated` (gitignored).
-Reports land next to the tree: `FILE-CMP.md`, `AST-DIFF.md`.
+Reports: `FILE-CMP.md`, `AST-DIFF.md`, `SURFACE.md`.
+
+`--check` compares this checkout’s compiler (`dmd/`/`gen/`/`driver/`) to
+its runtime: missing `ldc.*` modules, `LDC_*` pragmas, UDAs, public
+`llvm.*` names, and `_d_*` hooks. That is the “is it included?” net.
 
 ## Cache a window (no emit)
 
